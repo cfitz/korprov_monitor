@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Playwright browser binaries
+playwright-browsers/
+
+# Scratch/debug files
+debug_login.py
+/tmp/
+
+# Sensitive — never commit real credentials
+# (PERSONNUMMER, TELEGRAM_BOT_TOKEN etc. live in korprov_monitor.py — keep that file private)

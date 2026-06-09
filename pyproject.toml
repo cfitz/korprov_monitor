@@ -1,0 +1,15 @@
+[project]
+name = "korprov"
+version = "0.1.0"
+description = "Trafikverket MC körprov slot monitor"
+requires-python = ">=3.10"
+dependencies = [
+    "playwright>=1.40",
+    "requests>=2.31",
+]
+
+[project.scripts]
+korprov = "korprov:run_monitor"
+
+[tool.uv]
+dev-dependencies = []
