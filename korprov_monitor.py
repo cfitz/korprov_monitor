@@ -263,6 +263,26 @@ def make_headers():
     }
 
 
+def ping_keepalive(session):
+    """Call is-system-updating to pick up the rotated FpsExternalIdentity cookie (30-min TTL)."""
+    global COOKIE
+    try:
+        resp = session.post(
+            "https://fp.trafikverket.se/Boka/is-system-updating",
+            data="null",
+            headers={**make_headers(), "Content-Type": "text/plain"},
+            timeout=10,
+        )
+        for name in ("FpsExternalIdentity", "NSC_mc-gpsbsqspw-fyu-xfc-iuuq-wt"):
+            new_val = resp.cookies.get(name)
+            if new_val:
+                COOKIE = re.sub(
+                    rf"{re.escape(name)}=[^;]*", f"{name}={new_val}", COOKIE
+                )
+    except Exception as e:
+        print(f"  [keepalive] Warning: {e}")
+
+
 def send_telegram(message: str):
     resp = requests.post(
         f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
@@ -320,6 +340,12 @@ def check_batch(session, primary_id, primary_name, nearby_ids, nearby_names):
             handle_session_expired()
             return []
         if not resp.ok:
+            if resp.status_code == 403:
+                print(
+                    f"  [{primary_name}] ⚠️  Session expired — attempting auto-refresh..."
+                )
+                handle_session_expired()
+                return []
             # Check for login-required error in JSON body
             try:
                 err = resp.json()
@@ -391,6 +417,7 @@ def run_monitor():
     notified_slots = set()
 
     while True:
+        ping_keepalive(session)
         now = datetime.now().strftime("%H:%M:%S")
         print(f"\n[{now}] Checking {len(LOCATION_BATCHES)} batch(es)...")
 
